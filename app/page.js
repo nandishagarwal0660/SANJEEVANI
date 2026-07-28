@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import dynamic from 'next/dynamic';
 
 import IntakeConsole    from '@/components/IntakeConsole';
 import TriageResult     from '@/components/TriageResult';
@@ -20,14 +19,61 @@ export default function HomePage() {
   const [careType, setCareType]           = useState(null);
   const [careTrigger, setCareTrigger]     = useState(0);
   const [showTelehealth, setShowTelehealth] = useState(false);
-  const [loginOpen, setLoginOpen]         = useState(false);
   const [bodyRegion, setBodyRegion]       = useState(null);
+
+  // Auth modal states
+  const [authOpen, setAuthOpen]           = useState(false);
+  const [authMode, setAuthMode]           = useState('login'); // 'login' | 'register'
+
+  // Theme: 'dark' | 'light'
+  const [theme, setTheme]                 = useState('dark');
+
+  // Chat messages (general comment/chat)
+  const [chatMessages, setChatMessages]   = useState([
+    { id: 1, from: 'ai', text: 'Namaste 🙏 I am your AI health triage assistant. Describe your symptoms below, or ask me anything about health.', time: new Date() },
+  ]);
+  const [chatInput, setChatInput]         = useState('');
+  const chatEndRef                        = useRef(null);
+
+  // Apply theme to <html>
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  function sendChatMessage(e) {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    const userMsg = { id: Date.now(), from: 'user', text: chatInput.trim(), time: new Date() };
+    setChatMessages((prev) => [...prev, userMsg]);
+    setChatInput('');
+    // Simulate AI reply after short delay
+    setTimeout(() => {
+      setChatMessages((prev) => [...prev, {
+        id: Date.now() + 1,
+        from: 'ai',
+        text: 'I understand your concern. For accurate triage, please fill in your symptoms in the form below and click "Run Triage →". For emergencies, call 112 immediately.',
+        time: new Date(),
+      }]);
+    }, 900);
+  }
 
   async function handleTriage(inputs) {
     setIsProcessing(true);
     setResult(null);
     setCareType(null);
     setShowTelehealth(false);
+    // Add user symptom as chat bubble
+    setChatMessages((prev) => [...prev, {
+      id: Date.now(),
+      from: 'user',
+      text: `🩺 Triage submitted: "${inputs.narrative.slice(0, 80)}${inputs.narrative.length > 80 ? '…' : ''}"`,
+      time: new Date(),
+    }]);
 
     try {
       const res = await fetch('/api/triage', {
@@ -38,11 +84,23 @@ export default function HomePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Triage failed');
       setResult(data);
+      setChatMessages((prev) => [...prev, {
+        id: Date.now() + 1,
+        from: 'ai',
+        text: `✅ Triage complete! Severity: ${data.Severity_Color ?? 'Unknown'}. See results below.`,
+        time: new Date(),
+      }]);
       if (data.Severity_Color === 'RED' || data.ambulance_triggered) {
         setSosOpen(true);
       }
     } catch (err) {
       console.error(err);
+      setChatMessages((prev) => [...prev, {
+        id: Date.now() + 2,
+        from: 'ai',
+        text: '⚠️ Could not complete triage. Please check your connection or try again.',
+        time: new Date(),
+      }]);
     } finally {
       setIsProcessing(false);
     }
@@ -53,8 +111,11 @@ export default function HomePage() {
     setCareTrigger((p) => p + 1);
   }
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isDark ? 'theme-dark' : 'theme-light'}`}>
+
       {/* ── SOS Modal ─────────────────────────────── */}
       <AmbulanceModal
         isOpen={sosOpen}
@@ -62,18 +123,18 @@ export default function HomePage() {
         severityColor={result?.Severity_Color}
       />
 
-      {/* ── Login Modal ───────────────────────────── */}
+      {/* ── Auth Modal (Login / Register) ─────────── */}
       <AnimatePresence>
-        {loginOpen && (
+        {authOpen && (
           <motion.div
             className="sos-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setLoginOpen(false)}
+            onClick={() => setAuthOpen(false)}
           >
             <motion.div
-              className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0f1117] shadow-2xl"
+              className="auth-modal relative w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl"
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -83,51 +144,86 @@ export default function HomePage() {
               {/* Top gradient accent */}
               <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #34C98E, #4DA6D9, #34C98E)' }} />
               <div className="p-6">
-                <div className="mb-6 flex items-center gap-3">
+                {/* Logo + title */}
+                <div className="mb-5 flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint-500/15 border border-mint-500/30 text-mint-400">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                     </svg>
                   </div>
                   <div>
-                    <h2 className="font-display text-[17px] font-bold text-slate-100">Welcome back</h2>
-                    <p className="text-[12px] text-slate-500">Sign in to Sanjeevani</p>
+                    <h2 className="auth-title font-display text-[17px] font-bold">
+                      {authMode === 'login' ? 'Welcome back' : 'Create account'}
+                    </h2>
+                    <p className="auth-subtitle text-[12px]">
+                      {authMode === 'login' ? 'Sign in to Sanjeevani' : 'Join Sanjeevani — free forever'}
+                    </p>
                   </div>
                 </div>
 
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                  <div>
-                    <label className="mono-tag text-slate-500 block mb-1.5">Email / Phone</label>
-                    <input
-                      type="text"
-                      id="login-email"
-                      placeholder="you@example.com or +91 XXXXXX"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-slate-200 text-[13px] placeholder:text-slate-600 focus:outline-none focus:border-mint-500/60 transition-all font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="mono-tag text-slate-500 block mb-1.5">Password</label>
-                    <input
-                      type="password"
-                      id="login-password"
-                      placeholder="••••••••"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-slate-200 text-[13px] placeholder:text-slate-600 focus:outline-none focus:border-mint-500/60 transition-all font-mono"
-                    />
-                  </div>
-                  <button
-                    id="login-submit-btn"
-                    type="submit"
-                    className="w-full rounded-xl bg-mint-600 border border-mint-500/70 py-2.5 font-display text-[14px] font-semibold text-white hover:bg-mint-500 transition-all active:scale-[0.98]"
-                  >
-                    Sign In
-                  </button>
-                  <p className="text-center text-[12px] text-slate-600">
-                    No account?{' '}
-                    <button className="text-mint-400 hover:text-mint-300 transition-colors" onClick={() => {}}>
-                      Register free
+                {/* Tab switcher */}
+                <div className="auth-tab-bar mb-5 flex rounded-xl p-1 gap-1">
+                  {['login', 'register'].map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setAuthMode(mode)}
+                      className={`auth-tab flex-1 rounded-lg py-1.5 font-display text-[12px] font-semibold capitalize transition-all ${
+                        authMode === mode ? 'auth-tab-active' : 'auth-tab-inactive'
+                      }`}
+                    >
+                      {mode === 'login' ? 'Sign In' : 'Register'}
                     </button>
-                  </p>
-                </form>
+                  ))}
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.form
+                    key={authMode}
+                    initial={{ opacity: 0, x: authMode === 'login' ? -10 : 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-3"
+                    onSubmit={(e) => { e.preventDefault(); setAuthOpen(false); }}
+                  >
+                    {authMode === 'register' && (
+                      <div>
+                        <label className="mono-tag text-slate-500 block mb-1.5">Full Name</label>
+                        <input type="text" id="reg-name" placeholder="Ramesh Kumar"
+                          className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
+                      </div>
+                    )}
+                    <div>
+                      <label className="mono-tag text-slate-500 block mb-1.5">Email / Phone</label>
+                      <input type="text" id="login-email" placeholder="you@example.com or +91 XXXXXX"
+                        className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
+                    </div>
+                    <div>
+                      <label className="mono-tag text-slate-500 block mb-1.5">Password</label>
+                      <input type="password" id="login-password" placeholder="••••••••"
+                        className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
+                    </div>
+                    {authMode === 'register' && (
+                      <div>
+                        <label className="mono-tag text-slate-500 block mb-1.5">Confirm Password</label>
+                        <input type="password" id="reg-confirm" placeholder="••••••••"
+                          className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
+                      </div>
+                    )}
+                    <button type="submit" id="auth-submit-btn"
+                      className="w-full rounded-xl bg-mint-600 border border-mint-500/70 py-2.5 font-display text-[14px] font-semibold text-white hover:bg-mint-500 transition-all active:scale-[0.98] mt-1">
+                      {authMode === 'login' ? 'Sign In →' : 'Create Account →'}
+                    </button>
+                    <p className="text-center text-[12px] text-slate-500 pt-1">
+                      {authMode === 'login' ? "No account? " : "Already have one? "}
+                      <button type="button"
+                        className="text-mint-400 hover:text-mint-300 transition-colors font-semibold"
+                        onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>
+                        {authMode === 'login' ? 'Register free' : 'Sign in'}
+                      </button>
+                    </p>
+                  </motion.form>
+                </AnimatePresence>
               </div>
             </motion.div>
           </motion.div>
@@ -144,7 +240,7 @@ export default function HomePage() {
             </svg>
           </div>
           <div>
-            <span className="font-display text-[17px] font-bold tracking-tight text-slate-100">SANJEEVANI</span>
+            <span className="font-display text-[17px] font-bold tracking-tight nav-brand">SANJEEVANI</span>
             <span className="ml-2 hidden sm:inline-block mono-tag text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
               AI Triage · MedGemma-27B
             </span>
@@ -152,17 +248,42 @@ export default function HomePage() {
         </div>
 
         {/* Right nav actions */}
-        <div className="flex items-center gap-2.5">
-          {/* Live model badge */}
+        <div className="flex items-center gap-2">
+          {/* Live badge */}
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-mint-400 animate-pulse" />
             <span className="mono-tag text-slate-500">MedGemma-27B · Live</span>
           </div>
 
-          {/* SOS Button */}
+          {/* Theme Toggle */}
           <button
+            id="theme-toggle-btn"
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="theme-toggle-btn flex h-9 w-9 items-center justify-center rounded-full border transition-all"
+          >
+            <AnimatePresence mode="wait">
+              {isDark ? (
+                <motion.svg key="sun" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </motion.svg>
+              ) : (
+                <motion.svg key="moon" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </motion.svg>
+              )}
+            </AnimatePresence>
+          </button>
+
+          {/* SOS — direct call to 112 */}
+          <a
             id="header-sos-btn"
-            onClick={() => setSosOpen(true)}
+            href="tel:112"
             className="sos-pulse-btn flex items-center gap-2 rounded-full border border-red-500/40 bg-red-950/50 px-4 py-2 font-display text-[13px] font-bold text-red-300 hover:bg-red-900/60 transition-all"
           >
             <span className="relative flex h-2 w-2">
@@ -170,13 +291,13 @@ export default function HomePage() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
             </span>
             SOS
-          </button>
+          </a>
 
-          {/* Login Button */}
+          {/* Login/Register Button */}
           <button
             id="login-btn"
-            onClick={() => setLoginOpen(true)}
-            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2 font-display text-[13px] font-semibold text-slate-200 hover:bg-white/15 hover:border-white/25 transition-all"
+            onClick={() => { setAuthMode('login'); setAuthOpen(true); }}
+            className="login-nav-btn flex items-center gap-2 rounded-full border px-4 py-2 font-display text-[13px] font-semibold transition-all"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -190,21 +311,17 @@ export default function HomePage() {
       {/* ── Main Split Layout ─────────────────────── */}
       <main className="split-layout dot-grid">
 
-        {/* ════════════ LEFT PANEL — Description ════════════ */}
-        <motion.aside
-          className="left-panel"
-          initial={{ opacity: 0, x: -24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7 }}
-        >
+        {/* ════════ LEFT PANEL — Description ════════ */}
+        <motion.aside className="left-panel"
+          initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
+
           {/* Status pill */}
           <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-mint-500/25 bg-mint-500/8 px-3.5 py-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-mint-400 animate-pulse" />
             <p className="mono-tag text-mint-400">Rural Health Triage · Active</p>
           </div>
 
-          {/* Headline */}
-          <h1 className="font-display text-4xl font-bold leading-tight text-slate-50 sm:text-[48px] lg:text-[52px]">
+          <h1 className="left-headline font-display text-4xl font-bold leading-tight sm:text-[48px] lg:text-[52px]">
             Language should<br/>never delay{' '}
             <span className="relative inline-block text-mint-400">
               care
@@ -214,84 +331,79 @@ export default function HomePage() {
             </span>.
           </h1>
 
-          {/* Description paragraphs */}
-          <p className="mt-7 text-[15px] leading-relaxed text-slate-400 max-w-lg">
-            Speak or type in <span className="text-slate-200 font-medium">Hindi, Bhojpuri, Marathi</span> or Chhattisgarhi.
+          <p className="left-body mt-7 text-[15px] leading-relaxed max-w-lg">
+            Speak or type in <span className="left-emphasis font-medium">Hindi, Bhojpuri, Marathi</span> or Chhattisgarhi.
             MedGemma-27B normalizes your symptoms into clinical terms, scores severity against{' '}
             <span className="text-mint-400">WHO triage guidelines</span>, and routes you to the right care — instantly.
           </p>
-          <p className="mt-4 text-[14px] leading-relaxed text-slate-500 max-w-lg">
-            Designed for <span className="text-slate-300 font-medium">rural & semi-urban India</span> — covering areas with limited 
-            healthcare access and multilingual populations. No data leaves your device without consent.
+          <p className="left-body-muted mt-4 text-[14px] leading-relaxed max-w-lg">
+            Designed for <span className="left-emphasis font-medium">rural &amp; semi-urban India</span> — covering areas with limited
+            healthcare access and multilingual populations.
           </p>
 
           {/* Feature tags */}
           <div className="mt-8 flex flex-wrap gap-2">
             {['WHO-aligned triage', 'Multilingual AI', 'Emergency SOS', 'Biometric inputs', 'ASHA/PHC routing', 'Offline-capable'].map((tag) => (
-              <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 font-mono text-[11px] font-medium text-slate-400 hover:border-mint-500/30 hover:text-mint-300 transition-all cursor-default">
+              <span key={tag} className="feature-tag rounded-full border px-3.5 py-1.5 font-mono text-[11px] font-medium transition-all cursor-default">
                 {tag}
               </span>
             ))}
           </div>
 
-          {/* Stats row */}
+          {/* Stats */}
           <div className="mt-10 grid grid-cols-3 gap-4">
             {[
               { val: '27B', label: 'Model Params', color: 'text-mint-400' },
-              { val: '5+', label: 'Languages', color: 'text-cerulean-400' },
-              { val: '<3s', label: 'Avg. Triage', color: 'text-amber-400' },
+              { val: '5+',  label: 'Languages',    color: 'text-cerulean-500' },
+              { val: '<3s', label: 'Avg. Triage',  color: 'text-amber-400' },
             ].map(({ val, label, color }) => (
-              <div key={label} className="stat-card rounded-2xl border border-white/8 bg-white/5 p-4 text-center backdrop-blur-sm hover:border-white/15 transition-all">
+              <div key={label} className="stat-card rounded-2xl border p-4 text-center backdrop-blur-sm transition-all">
                 <p className={`font-display text-2xl font-bold ${color}`}>{val}</p>
-                <p className="mono-tag text-slate-500 mt-1">{label}</p>
+                <p className="stat-label mono-tag mt-1">{label}</p>
               </div>
             ))}
           </div>
 
-          {/* Big SOS CTA */}
+          {/* SOS CTA — direct call */}
           <div className="mt-10">
-            <button
+            <a
               id="left-sos-btn"
-              onClick={() => setSosOpen(true)}
-              className="sos-hero-btn group relative w-full overflow-hidden rounded-2xl border border-red-500/50 bg-red-950/40 px-6 py-4 transition-all hover:bg-red-950/60 hover:border-red-400/70 active:scale-[0.98]"
+              href="tel:112"
+              className="sos-hero-btn group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-red-500/50 bg-red-950/40 px-6 py-4 transition-all hover:bg-red-950/60 hover:border-red-400/70 active:scale-[0.98]"
             >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'radial-gradient(ellipse at center, rgba(239,68,68,0.08) 0%, transparent 70%)' }} />
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-red-500 bg-red-950">
-                    <span className="text-xl">🚑</span>
-                    <span className="absolute -inset-1 rounded-full border border-red-500/30 animate-ping" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-display text-[15px] font-bold text-red-300">Emergency SOS</p>
-                    <p className="text-[12px] text-red-400/70">Call 112 · Ambulance · Critical Care</p>
-                  </div>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: 'radial-gradient(ellipse at center, rgba(239,68,68,0.08) 0%, transparent 70%)' }} />
+              <div className="relative flex items-center gap-3">
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-red-500 bg-red-950">
+                  <span className="text-xl">🚑</span>
+                  <span className="absolute -inset-1 rounded-full border border-red-500/30 animate-ping" />
                 </div>
-                <svg className="h-5 w-5 text-red-400/60 group-hover:text-red-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-                </svg>
+                <div className="text-left">
+                  <p className="font-display text-[15px] font-bold text-red-300">Emergency SOS — Call 112</p>
+                  <p className="text-[12px] text-red-400/70">Tap to call · Ambulance · Critical Care</p>
+                </div>
               </div>
-            </button>
+              <svg className="relative h-5 w-5 text-red-400/60 group-hover:text-red-300 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 0 1 2-2h3.28a1 1 0 0 1 .948.684l1.498 4.493a1 1 0 0 1-.502 1.21l-2.257 1.13a11.042 11.042 0 0 0 5.516 5.516l1.13-2.257a1 1 0 0 1 1.21-.502l4.493 1.498a1 1 0 0 1 .684.949V19a2 2 0 0 1-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+            </a>
           </div>
 
-          {/* Powered by banner */}
+          {/* Powered by */}
           <div className="mt-6 flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-4 py-3">
             <span className="text-lg">⚕</span>
             <p className="text-[12px] text-slate-600 font-mono leading-relaxed">
-              Powered by <span className="text-slate-400">google/medgemma-27b-it</span> · WHO ICD-11 aligned ·{' '}
+              Powered by <span className="text-slate-400">google/medgemma-27b-it</span> · WHO ICD-11 ·{' '}
               <span className="text-red-500/80">Not a substitute for emergency services</span>
             </p>
           </div>
         </motion.aside>
 
-        {/* ════════════ RIGHT PANEL — Chat / Form ════════════ */}
-        <motion.section
-          className="right-panel"
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.15 }}
-        >
+        {/* ════════ RIGHT PANEL — Chat + Form ════════ */}
+        <motion.section className="right-panel"
+          initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.15 }}>
           <div className="right-panel-inner">
+
             {/* Panel header */}
             <div className="right-panel-header">
               <div className="flex items-center gap-2.5">
@@ -301,8 +413,8 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="font-display text-[14px] font-bold text-slate-100">Symptom Triage Console</h2>
-                  <p className="text-[11px] text-slate-500 font-mono">AI-powered · Real-time analysis</p>
+                  <h2 className="panel-title font-display text-[14px] font-bold">Symptom Triage Console</h2>
+                  <p className="panel-subtitle text-[11px] font-mono">AI-powered · Real-time analysis</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 rounded-full border border-mint-500/20 bg-mint-500/8 px-2.5 py-1">
@@ -311,44 +423,54 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Scrollable content area */}
-            <div className="right-panel-scroll">
-              {/* Chat-style welcome message */}
-              {!result && !isProcessing && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="chat-bubble-ai mb-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="ai-avatar shrink-0">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[13px] font-semibold text-mint-300 mb-1">Sanjeevani AI</p>
-                      <p className="text-[13px] text-slate-300 leading-relaxed">
-                        Namaste 🙏 I am your AI health triage assistant. Please describe your symptoms below in Hindi, English, Marathi, Bhojpuri, or Chhattisgarhi. I will analyze them and provide immediate guidance.
+            {/* ── Chat / Message history ── */}
+            <div className="right-panel-scroll" id="chat-scroll-area">
+              {/* AI + user chat messages */}
+              <div className="space-y-3 mb-3">
+                {chatMessages.map((msg) => (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={`flex gap-2.5 ${msg.from === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+                  >
+                    {msg.from === 'ai' && (
+                      <div className="ai-avatar shrink-0 mt-0.5">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                      </div>
+                    )}
+                    {msg.from === 'user' && (
+                      <div className="user-avatar shrink-0 mt-0.5">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                      </div>
+                    )}
+                    <div className={`max-w-[85%] ${msg.from === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai-msg'}`}>
+                      {msg.from === 'ai' && <p className="text-[11px] font-semibold text-mint-400 mb-1">Sanjeevani AI</p>}
+                      <p className="text-[13px] leading-relaxed chat-msg-text">{msg.text}</p>
+                      <p className="text-[10px] mt-1 chat-time">
+                        {msg.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <p className="text-[11px] text-slate-600 mt-2 font-mono">
-                        आपके लक्षण बताएं और हम तुरंत मार्गदर्शन करेंगे।
-                      </p>
                     </div>
-                  </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
 
-              {/* Triage Result — shown as chat response */}
+              {/* Triage Result */}
               <TriageResult
                 result={result}
                 isProcessing={isProcessing}
-                onSOS={() => setSosOpen(true)}
+                onSOS={() => window.location.href = 'tel:112'}
                 onFindCare={handleFindCare}
                 onTelehealth={() => setShowTelehealth(true)}
               />
 
-              {/* HUD panels below result */}
+              {/* HUD panels */}
               {(result || isProcessing) && (
                 <div className="mt-4 space-y-4">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -371,11 +493,8 @@ export default function HomePage() {
 
               {/* Telehealth */}
               {showTelehealth && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 glass-card p-5 border-cerulean-500/30"
-                >
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 glass-card p-5 border-cerulean-500/30">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-xl">📱</span>
                     <div>
@@ -399,7 +518,32 @@ export default function HomePage() {
               )}
             </div>
 
-            {/* ── Fixed intake form at bottom ── */}
+            {/* ── Chat input box ── */}
+            <div className="chat-input-bar">
+              <form onSubmit={sendChatMessage} className="flex items-center gap-2">
+                <input
+                  id="chat-comment-input"
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Ask a health question or comment…"
+                  className="chat-text-input flex-1 rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all"
+                />
+                <button
+                  id="chat-send-btn"
+                  type="submit"
+                  disabled={!chatInput.trim()}
+                  className="chat-send-btn flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all disabled:opacity-40"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+
+            {/* ── Triage form (fixed at bottom) ── */}
             <div className="right-panel-form">
               <IntakeConsole onSubmit={handleTriage} isProcessing={isProcessing} />
             </div>
@@ -408,10 +552,11 @@ export default function HomePage() {
       </main>
 
       {/* ── Footer ──────────────────────────────── */}
-      <footer className="relative z-10 border-t border-white/5 px-6 py-5 sm:px-10 text-center">
+      <footer className="relative z-10 border-t border-white/5 px-6 py-4 sm:px-10 text-center">
         <p className="font-mono text-[11px] text-slate-700 max-w-3xl mx-auto leading-relaxed">
           ⚕ Sanjeevani is an AI clinical decision-support tool powered by MedGemma-27B. It does not provide a diagnosis and does not
-          replace assessment by a licensed clinician. In any life-threatening emergency, call <strong className="text-red-500">112</strong> immediately.
+          replace assessment by a licensed clinician. In any life-threatening emergency, call{' '}
+          <a href="tel:112" className="text-red-500 font-bold hover:underline">112</a> immediately.
           &nbsp;·&nbsp; Designed for rural &amp; semi-urban populations of India.
         </p>
       </footer>

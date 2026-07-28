@@ -8,6 +8,79 @@
   --font-mono:    'JetBrains Mono', 'Fira Mono', ui-monospace, monospace;
 }
 
+/* ══════════════════════════════════════════════════════════
+   THEME TOKENS — dark (default) & light
+   ══════════════════════════════════════════════════════════ */
+[data-theme='dark'] {
+  --bg-page:        #0B0C10;
+  --bg-panel:       rgba(20,22,28,0.75);
+  --bg-nav:         rgba(11,12,16,0.80);
+  --bg-input:       rgba(255,255,255,0.05);
+  --bg-bubble-ai:   rgba(52,201,142,0.06);
+  --bg-bubble-user: rgba(52,201,142,0.14);
+  --bg-auth:        #0f1117;
+  --bg-tab:         rgba(255,255,255,0.05);
+  --bg-tab-active:  rgba(255,255,255,0.12);
+  --border-main:    rgba(255,255,255,0.07);
+  --border-input:   rgba(255,255,255,0.10);
+  --border-tab:     rgba(255,255,255,0.08);
+  --text-primary:   #E2E8F0;
+  --text-secondary: #94A3B8;
+  --text-muted:     #64748B;
+  --text-inverse:   #0B0C10;
+  --stat-bg:        rgba(255,255,255,0.05);
+  --stat-border:    rgba(255,255,255,0.08);
+  --stat-label:     #64748B;
+  --feature-tag-bg:     rgba(255,255,255,0.05);
+  --feature-tag-border: rgba(255,255,255,0.10);
+  --feature-tag-text:   #94A3B8;
+  --chat-time:      #475569;
+  --chat-input-bg:  rgba(255,255,255,0.06);
+  --chat-send-bg:   #34C98E;
+  --chat-send-text: #0B0C10;
+  --theme-btn-bg:   rgba(255,255,255,0.08);
+  --theme-btn-border: rgba(255,255,255,0.12);
+  --theme-btn-icon: #94A3B8;
+  --login-btn-border: rgba(255,255,255,0.15);
+  --login-btn-bg:     rgba(255,255,255,0.08);
+  --login-btn-text:   #E2E8F0;
+}
+
+[data-theme='light'] {
+  --bg-page:        #F0F4F8;
+  --bg-panel:       rgba(255,255,255,0.90);
+  --bg-nav:         rgba(255,255,255,0.88);
+  --bg-input:       rgba(0,0,0,0.04);
+  --bg-bubble-ai:   rgba(52,201,142,0.10);
+  --bg-bubble-user: rgba(52,201,142,0.18);
+  --bg-auth:        #FFFFFF;
+  --bg-tab:         rgba(0,0,0,0.04);
+  --bg-tab-active:  #FFFFFF;
+  --border-main:    rgba(0,0,0,0.08);
+  --border-input:   rgba(0,0,0,0.12);
+  --border-tab:     rgba(0,0,0,0.06);
+  --text-primary:   #0F172A;
+  --text-secondary: #334155;
+  --text-muted:     #64748B;
+  --text-inverse:   #FFFFFF;
+  --stat-bg:        rgba(255,255,255,0.85);
+  --stat-border:    rgba(0,0,0,0.08);
+  --stat-label:     #64748B;
+  --feature-tag-bg:     rgba(0,0,0,0.04);
+  --feature-tag-border: rgba(0,0,0,0.10);
+  --feature-tag-text:   #475569;
+  --chat-time:      #94A3B8;
+  --chat-input-bg:  rgba(0,0,0,0.05);
+  --chat-send-bg:   #34C98E;
+  --chat-send-text: #FFFFFF;
+  --theme-btn-bg:   rgba(0,0,0,0.06);
+  --theme-btn-border: rgba(0,0,0,0.12);
+  --theme-btn-icon: #334155;
+  --login-btn-border: rgba(0,0,0,0.15);
+  --login-btn-bg:     rgba(0,0,0,0.06);
+  --login-btn-text:   #0F172A;
+}
+
 /* ── Scrollbar ──────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
@@ -21,12 +94,13 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background-color: #0B0C10;
+  background-color: var(--bg-page);
   background-image:
     radial-gradient(ellipse 100% 60% at 50% -5%, rgba(52,201,142,0.06) 0%, transparent 65%),
     radial-gradient(ellipse 80% 40% at 80% 80%, rgba(77,166,217,0.04) 0%, transparent 60%);
   min-height: 100vh;
-  color: #E2E8F0;
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ── Glassmorphism nav ──────────────────────────────────── */
@@ -340,3 +414,187 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   THEMED COMPONENTS
+   ══════════════════════════════════════════════════════════ */
+
+/* ── App shell + nav themed ─────────────────────────────── */
+.app-shell {
+  background-color: var(--bg-page);
+  transition: background-color 0.3s ease;
+}
+.glass-nav {
+  background: var(--bg-nav) !important;
+  border-bottom: 1px solid var(--border-main) !important;
+}
+
+/* Light mode nav brand */
+.theme-light .nav-brand { color: #0F172A; }
+.theme-dark  .nav-brand { color: #F1F5F9; }
+
+/* ── Theme toggle button ─────────────────────────────────── */
+.theme-toggle-btn {
+  background: var(--theme-btn-bg);
+  border-color: var(--theme-btn-border);
+  color: var(--theme-btn-icon);
+}
+.theme-toggle-btn:hover {
+  background: var(--chat-send-bg);
+  border-color: transparent;
+  color: var(--chat-send-text);
+}
+
+/* ── Login nav button ────────────────────────────────────── */
+.login-nav-btn {
+  background: var(--login-btn-bg);
+  border-color: var(--login-btn-border);
+  color: var(--login-btn-text);
+}
+.login-nav-btn:hover {
+  border-color: rgba(52,201,142,0.4);
+  color: #34C98E;
+}
+
+/* ── Auth modal ──────────────────────────────────────────── */
+.auth-modal {
+  background: var(--bg-auth);
+  border: 1px solid var(--border-main);
+}
+.auth-title  { color: var(--text-primary); }
+.auth-subtitle { color: var(--text-muted); }
+
+.auth-tab-bar {
+  background: var(--bg-tab);
+  border: 1px solid var(--border-tab);
+}
+.auth-tab-active {
+  background: var(--bg-tab-active);
+  color: #34C98E;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.auth-tab-inactive {
+  color: var(--text-muted);
+}
+.auth-tab-inactive:hover { color: var(--text-secondary); }
+
+.auth-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  color: var(--text-primary);
+}
+.auth-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+.auth-input:focus { border-color: rgba(52,201,142,0.55); }
+
+/* ── Left panel themed ───────────────────────────────────── */
+.left-headline { color: var(--text-primary); }
+.left-body     { color: var(--text-secondary); }
+.left-body-muted { color: var(--text-muted); }
+.left-emphasis { color: var(--text-primary); }
+
+.feature-tag {
+  background: var(--feature-tag-bg);
+  border-color: var(--feature-tag-border);
+  color: var(--feature-tag-text);
+}
+.feature-tag:hover {
+  border-color: rgba(52,201,142,0.35);
+  color: #34C98E;
+}
+
+.stat-card {
+  background: var(--stat-bg);
+  border-color: var(--stat-border);
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-label { color: var(--stat-label); }
+
+/* ── Right panel themed ──────────────────────────────────── */
+.panel-title   { color: var(--text-primary); }
+.panel-subtitle { color: var(--text-muted); }
+
+/* ── Chat bubbles ────────────────────────────────────────── */
+.chat-bubble-ai-msg {
+  background: var(--bg-bubble-ai);
+  border: 1px solid rgba(52,201,142,0.18);
+  border-radius: 4px 16px 16px 16px;
+  padding: 0.7rem 0.9rem;
+}
+.chat-bubble-user {
+  background: var(--bg-bubble-user);
+  border: 1px solid rgba(52,201,142,0.25);
+  border-radius: 16px 4px 16px 16px;
+  padding: 0.7rem 0.9rem;
+}
+.chat-msg-text { color: var(--text-primary); }
+.chat-time     { color: var(--chat-time); }
+
+/* ── Avatars ─────────────────────────────────────────────── */
+.ai-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(52,201,142,0.15);
+  border: 1px solid rgba(52,201,142,0.30);
+  color: #34C98E;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(52,201,142,0.12);
+  border: 1px solid rgba(52,201,142,0.25);
+  color: #34C98E;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Chat input bar ──────────────────────────────────────── */
+.chat-input-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-main);
+  padding: 0.625rem 1.25rem;
+  background: var(--bg-nav);
+  backdrop-filter: blur(12px);
+}
+.chat-text-input {
+  background: var(--chat-input-bg);
+  border: 1px solid var(--border-input);
+  color: var(--text-primary);
+}
+.chat-text-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+.chat-text-input:focus { border-color: rgba(52,201,142,0.5); }
+
+.chat-send-btn {
+  background: var(--chat-send-bg);
+  color: var(--chat-send-text);
+  border: none;
+}
+.chat-send-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+}
+
+/* ── Light mode glass-card override ─────────────────────── */
+.theme-light .glass-card {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(0,0,0,0.08);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.theme-light .right-panel-header,
+.theme-light .right-panel-form,
+.theme-light .chat-input-bar {
+  background: rgba(255,255,255,0.88);
+  border-color: rgba(0,0,0,0.07);
+}
+.theme-light .left-panel {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(52,201,142,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, rgba(77,166,217,0.05) 0%, transparent 50%),
+    #F0F4F8;
+}
+.theme-light .dot-grid {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
