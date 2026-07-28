@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-body:    'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Mono', ui-monospace, monospace;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 201, 142, 0.3) rgba(255,255,255,0.05);
+}
+*::-webkit-scrollbar       { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(52,201,142,0.3); border-radius: 99px; }
+
+/* ── Global base ────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: #0B0C10;
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% -5%, rgba(52,201,142,0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 40% at 80% 80%, rgba(77,166,217,0.04) 0%, transparent 60%);
+  min-height: 100vh;
+  color: #E2E8F0;
+}
+
+/* ── Glassmorphism nav ──────────────────────────────────── */
+.glass-nav {
+  background: rgba(11, 12, 16, 0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Glass card (dark) ──────────────────────────────────── */
+.glass-card {
+  background: rgba(20, 22, 28, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ── Severity Badge Ring ────────────────────────────────── */
+.sev-ring {
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sev-ring-red    { animation: sevPulseRed    1.2s ease-in-out infinite; }
+.sev-ring-yellow { animation: sevPulseYellow 1.8s ease-in-out infinite; }
+.sev-ring-green  { box-shadow: 0 0 0 0 rgba(34,197,94,0);   }
+.sev-ring-blue   { box-shadow: 0 0 0 0 rgba(59,130,246,0);  }
+
+@keyframes sevPulseRed {
+  0%,100% { box-shadow: 0 0 0 0   rgba(239,68,68,0.55); }
+  50%     { box-shadow: 0 0 0 18px rgba(239,68,68,0);    }
+}
+@keyframes sevPulseYellow {
+  0%,100% { box-shadow: 0 0 0 0   rgba(245,158,11,0.5); }
+  50%     { box-shadow: 0 0 0 14px rgba(245,158,11,0);   }
+}
+
+/* ── Clinical caret ─────────────────────────────────────── */
+.clinical-caret::after {
+  content: '▍';
+  animation: blink 1s step-end infinite;
+  color: #34C98E;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── Body canvas ────────────────────────────────────────── */
+.body-canvas-wrap {
+  border: 1px solid rgba(255,255,255,0.05);
+  background: transparent;
+}
+
+.body-glow-ring {
+  width: 260px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(52,201,142,0.08) 0%, transparent 70%);
+  animation: body-breathe 3.5s ease-in-out infinite;
+}
+@keyframes body-breathe {
+  0%,100% { transform: scale(1);    opacity: 0.6; }
+  50%      { transform: scale(1.06); opacity: 1;   }
+}
+
+.region-card {
+  min-width: 72px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Dot grid background decoration ────────────────────── */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── Skeleton shimmer ───────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── SOS Ambulance Modal ────────────────────────────────── */
+.sos-overlay {
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Facility card ──────────────────────────────────────── */
+.facility-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.facility-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52,201,142,0.35);
+}
+
+/* ── Mono tag ───────────────────────────────────────────── */
+.mono-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
