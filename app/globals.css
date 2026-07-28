@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 201, 142, 0.25) transparent;
+}
+
+body {
+  background-color: #F4F7F6;
+  min-height: 100vh;
+}
+
+/* Glassmorphism panel for header */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* Claymorphism cards */
+.clay-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.clay-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.clinical-caret::after {
+  content: '▍';
+  animation: blink 1s step-end infinite;
+  color: #34C98E;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ── 3D Body Model ─────────────────────────────────────── */
+.body-canvas-wrap {
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: transparent;
+}
+
+.body-canvas-bg {
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 50%, rgba(52, 201, 142, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(77, 166, 217, 0.04) 0%, transparent 60%);
+}
+
+.body-glow-ring {
+  width: 260px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(52, 201, 142, 0.08) 0%, transparent 70%);
+  animation: body-breathe 3.5s ease-in-out infinite;
+}
+
+@keyframes body-breathe {
+  0%, 100% { transform: scale(1);   opacity: 0.6; }
+  50%        { transform: scale(1.06); opacity: 1;   }
+}
+
+.region-card {
+  min-width: 68px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.region-btn {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
