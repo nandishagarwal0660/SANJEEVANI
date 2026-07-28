@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Languages, FileText } from 'lucide-react';
 import Panel from './Panel';
 
 export default function SummaryPanel({ result, isProcessing }) {
@@ -58,7 +59,7 @@ export default function SummaryPanel({ result, isProcessing }) {
           {/* English */}
           <div className="rounded-2xl border border-white/8 bg-white/3 p-5">
             <div className="mb-3 flex items-center gap-2 border-b border-white/5 pb-2">
-              <span className="text-base">🇬🇧</span>
+              <span className="text-slate-400"><FileText size={16} /></span>
               <span className="font-display text-[13px] font-semibold text-slate-200">English Clinical Summary</span>
             </div>
             <p className="font-body text-[13px] leading-relaxed text-slate-400 whitespace-pre-wrap">
@@ -69,7 +70,7 @@ export default function SummaryPanel({ result, isProcessing }) {
           {/* Local language */}
           <div className="rounded-2xl border border-cerulean-500/20 bg-cerulean-950/20 p-5">
             <div className="mb-3 flex items-center gap-2 border-b border-cerulean-500/15 pb-2">
-              <span className="text-base">🇮🇳</span>
+              <span className="text-cerulean-400"><Languages size={16} /></span>
               <span className="font-display text-[13px] font-semibold text-cerulean-300">Patient Language (Regional)</span>
             </div>
             <p className="font-body text-[14px] leading-relaxed text-slate-200 whitespace-pre-wrap font-medium">

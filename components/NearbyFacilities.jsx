@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Building2, Stethoscope, AlertTriangle, Star } from 'lucide-react';
 import Panel from './Panel';
 
 export default function NearbyFacilities({ facilityType = 'hospital', trigger }) {
@@ -51,13 +52,14 @@ export default function NearbyFacilities({ facilityType = 'hospital', trigger })
   return (
     <Panel
       eyebrow="Nearby Care"
-      title={facilityType === 'hospital' ? '🏥 Nearest Hospitals' : '🩺 Nearby Clinics & Doctors'}
+      title={facilityType === 'hospital' ? <><Building2 size={16} /> Nearest Hospitals</> : <><Stethoscope size={16} /> Nearby Clinics & Doctors</>}
       statusDot={loading ? '#F59E0B' : '#34C98E'}
       accentColor="#34C98E"
     >
       {isMock && (
-        <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-950/30 px-4 py-2 text-[12px] text-amber-400/80 font-mono">
-          ⚠ Mock data — add GOOGLE_MAPS_API_KEY for live results near you.
+        <div className="mb-3 flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-950/30 px-4 py-2 text-[12px] text-amber-400/80 font-mono">
+          <AlertTriangle size={14} />
+          <span>Mock data — add GOOGLE_MAPS_API_KEY for live results near you.</span>
         </div>
       )}
 
@@ -93,8 +95,8 @@ export default function NearbyFacilities({ facilityType = 'hospital', trigger })
                 transition={{ delay: i * 0.07 }}
                 className="facility-card flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 p-4 hover:bg-white/6 no-underline block"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mint-950/60 border border-mint-500/20 text-xl">
-                  🏥
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                  {facilityType === 'hospital' ? <Building2 size={18} /> : <Stethoscope size={18} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-display text-[14px] font-semibold text-slate-100 truncate">{f.name}</p>
@@ -102,7 +104,9 @@ export default function NearbyFacilities({ facilityType = 'hospital', trigger })
                 </div>
                 <div className="text-right shrink-0">
                   {f.rating && (
-                    <p className="text-[12px] font-mono text-amber-400">★ {f.rating}</p>
+                    <p className="flex items-center gap-1 text-[12px] font-mono text-amber-400">
+                      <Star size={12} fill="currentColor" /> {f.rating}
+                    </p>
                   )}
                   <span className={`text-[11px] font-mono font-semibold ${f.open_now ? 'text-mint-400' : 'text-red-400'}`}>
                     {f.open_now === null ? '—' : f.open_now ? 'Open' : 'Closed'}

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { Ambulance, Building2, Stethoscope, Smartphone } from 'lucide-react';
 import { getSevConfig } from '@/lib/acuity';
 
 export default function TriageResult({ result, isProcessing, onSOS, onFindCare, onTelehealth }) {
@@ -65,27 +66,27 @@ export default function TriageResult({ result, isProcessing, onSOS, onFindCare, 
                     <h2 className={`font-display text-xl font-bold ${sev.textStrong}`}>
                       {sev.action}
                     </h2>
-                    <p className="text-[13px] text-slate-400 mt-0.5">
-                      Specialization: <span className={`font-semibold ${sev.text}`}>{result.Required_Specialization}</span>
+                  <p style={{ fontSize: '13px', color: 'var(--text-2)', margin: '4px 0 0 0' }}>
+                      Specialization: <span style={{ fontWeight: 600, color: sev.color }}>{result.Required_Specialization}</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Patient Communication (local language) */}
-                <div className={`rounded-xl border px-4 py-3 ${sev.border} bg-black/20 mb-4`}>
-                  <p className="mono-tag text-slate-500 mb-2">Patient Communication ({result._source || 'AI'})</p>
-                  <p className="font-body text-[14px] leading-relaxed text-slate-200 whitespace-pre-wrap">
+                <div className="rounded-xl border px-4 py-3 mb-4" style={{ borderColor: sev.color + '40', background: sev.color + '10' }}>
+                  <p className="mono-tag mb-2" style={{ color: 'var(--text-3)' }}>Patient Communication ({result._source || 'AI'})</p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '1.65', color: 'var(--text-1)', whiteSpace: 'pre-wrap', margin: 0 }}>
                     {result.Patient_Communication}
                   </p>
                 </div>
 
                 {/* Immediate Actions */}
                 {result.Immediate_Actions?.length > 0 && (
-                  <div className="mb-4">
-                    <p className="mono-tag text-slate-500 mb-2">Immediate Steps</p>
+                  <div className="mb-3">
+                    <p className="mono-tag mb-2" style={{ color: 'var(--text-3)' }}>Immediate Steps</p>
                     <ul className="space-y-1.5">
                       {result.Immediate_Actions.map((action, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-[13px] text-slate-300">
+                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: 'var(--text-1)' }}>
                           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: sev.color }} />
                           {action}
                         </li>
@@ -102,7 +103,7 @@ export default function TriageResult({ result, isProcessing, onSOS, onFindCare, 
                       onClick={onSOS}
                       className="flex items-center gap-2 rounded-xl border border-red-500 bg-red-600 px-5 py-2.5 font-display text-[13px] font-bold text-white shadow-lg shadow-red-900/40 hover:bg-red-500 active:scale-95 transition-all animate-sev-pulse-red"
                     >
-                      🚑 Book Ambulance NOW
+                      <Ambulance size={16} /> Book Ambulance NOW
                     </button>
                   )}
                   {(result.Severity_Color === 'RED' || result.Severity_Color === 'YELLOW') && (
@@ -111,7 +112,7 @@ export default function TriageResult({ result, isProcessing, onSOS, onFindCare, 
                       onClick={() => onFindCare('hospital')}
                       className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 font-display text-[13px] font-semibold text-white transition-all active:scale-95 ${sev.ctaClass}`}
                     >
-                      🏥 Find Nearest Hospital
+                      <Building2 size={16} /> Find Nearest Hospital
                     </button>
                   )}
                   {(result.Severity_Color === 'GREEN' || result.Severity_Color === 'BLUE') && (
@@ -121,14 +122,15 @@ export default function TriageResult({ result, isProcessing, onSOS, onFindCare, 
                         onClick={() => onFindCare('clinic')}
                         className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 font-display text-[13px] font-semibold text-white transition-all active:scale-95 ${sev.ctaClass}`}
                       >
-                        🩺 Find a Specialist
+                        <Stethoscope size={16} /> Find a Specialist
                       </button>
                       <button
                         id="telehealth-btn"
                         onClick={onTelehealth}
-                        className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 font-display text-[13px] font-semibold text-slate-300 hover:border-cerulean-500/50 hover:text-cerulean-300 transition-all active:scale-95"
+                        className="flex items-center gap-2 rounded-xl border px-5 py-2.5 font-display text-[13px] font-semibold transition-all active:scale-95"
+                        style={{ borderColor: 'var(--border)', background: 'var(--bg-card)', color: 'var(--text-2)' }}
                       >
-                        📱 Book Telehealth
+                        <Smartphone size={16} /> Book Telehealth
                       </button>
                     </>
                   )}

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Siren, Mic } from 'lucide-react';
 
 const LANGUAGES = [
   { code: 'hi',  label: 'हिंदी',       name: 'Hindi' },
@@ -109,7 +110,9 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
             initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="mb-3 flex items-center gap-2.5 rounded-xl border border-red-500/40 bg-red-950/60 px-3.5 py-2.5"
           >
-            <span className="text-lg shrink-0">🚨</span>
+            <div className="shrink-0 text-red-400">
+              <Siren size={20} />
+            </div>
             <div>
               <p className="font-display text-[12px] font-bold text-red-300">Emergency keyword detected</p>
               <p className="text-[11px] text-red-400/80">Triage will be auto-set to RED. Confirm narrative is correct.</p>
@@ -211,7 +214,7 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
             }`}
           >
             <span className={`h-2 w-2 rounded-full shrink-0 ${isListening ? 'bg-red-400 animate-pulse' : 'bg-slate-600'}`} />
-            {isListening ? 'Listening…' : '🎤 Voice'}
+            {isListening ? 'Listening…' : <><Mic size={14} /> Voice</>}
           </button>
 
           <button
@@ -241,7 +244,7 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
                 </svg>
                 Analyzing…
               </>
-            ) : isEmergency ? '🚨 Emergency →' : 'Run Triage →'}
+            ) : isEmergency ? <><Siren size={14} /> Emergency →</> : 'Run Triage →'}
           </button>
         </div>
       </form>
