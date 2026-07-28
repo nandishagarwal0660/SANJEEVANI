@@ -162,6 +162,176 @@ body {
   text-transform: uppercase;
 }
 
+/* ══════════════════════════════════════════════════════════
+   SPLIT LAYOUT — New Hero Design
+   ══════════════════════════════════════════════════════════ */
+
+/* Full-page shell — flex column, fills viewport */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Split hero grid ─────────────────────────────────────── */
+.split-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  max-height: calc(100vh - 57px - 51px); /* viewport minus nav + footer */
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .split-layout {
+    grid-template-columns: 1fr;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* ── Left description panel ─────────────────────────────── */
+.left-panel {
+  padding: 3rem 3rem 3rem 3.5rem;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(52,201,142,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, rgba(77,166,217,0.04) 0%, transparent 50%);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1280px) {
+  .left-panel { padding: 2rem 2rem 2rem 2.5rem; }
+}
+@media (max-width: 1024px) {
+  .left-panel {
+    padding: 2.5rem 1.5rem 2rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+}
+
+/* ── Right chat/form panel ──────────────────────────────── */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(52,201,142,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 10% 90%, rgba(77,166,217,0.03) 0%, transparent 60%);
+}
+
+.right-panel-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Panel header strip */
+.right-panel-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(11,12,16,0.6);
+  backdrop-filter: blur(8px);
+}
+
+/* Scrollable result + chat messages area */
+.right-panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Sticky form at bottom */
+.right-panel-form {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 1rem 1.25rem;
+  background: rgba(11,12,16,0.80);
+  backdrop-filter: blur(12px);
+}
+
+/* ── Chat bubbles ───────────────────────────────────────── */
+.chat-bubble-ai {
+  background: rgba(52,201,142,0.06);
+  border: 1px solid rgba(52,201,142,0.15);
+  border-radius: 0 16px 16px 16px;
+  padding: 0.875rem 1rem;
+  position: relative;
+}
+
+.ai-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(52,201,142,0.15);
+  border: 1px solid rgba(52,201,142,0.3);
+  color: #34C98E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Stat card hover ────────────────────────────────────── */
+.stat-card {
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ── SOS hero button ────────────────────────────────────── */
+.sos-hero-btn {
+  position: relative;
+}
+.sos-hero-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(239,68,68,0.08), transparent);
+  pointer-events: none;
+}
+
+/* ── SOS nav pulse ──────────────────────────────────────── */
+.sos-pulse-btn {
+  position: relative;
+}
+.sos-pulse-btn::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 99px;
+  border: 1px solid rgba(239,68,68,0.2);
+  animation: sosPingOuter 2s ease-in-out infinite;
+}
+@keyframes sosPingOuter {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0; transform: scale(1.1); }
+}
+
+/* Right panel on mobile stacks below left */
+@media (max-width: 1024px) {
+  .right-panel {
+    max-height: 90vh;
+  }
+  .right-panel-inner {
+    height: 90vh;
+  }
+}
+
 /* ── Reduced motion ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
