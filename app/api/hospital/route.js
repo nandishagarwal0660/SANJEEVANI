@@ -1,42 +1,29 @@
 import { NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
-import { INITIAL_HOSPITALS, INITIAL_DISPATCHES } from '../seed/route';
-
 export async function GET() {
   try {
     const db = await getDatabase();
     if (!db) {
-      return NextResponse.json({
-        success: true,
-        hospital: INITIAL_HOSPITALS[0],
-        incomingAmbulances: INITIAL_DISPATCHES,
-        source: 'mock'
-      });
+      throw new Error("Database connection unavailable");
     }
 
-    let hospital = await db.collection('hospitals').findOne({ hospitalId: 'HOSP-001' });
+    const hospital = await db.collection('hospitals').findOne({ id: 'hosp-1' });
     if (!hospital) {
-      await db.collection('hospitals').insertMany(INITIAL_HOSPITALS);
-      hospital = INITIAL_HOSPITALS[0];
+      return NextResponse.json({ success: false, error: 'Hospital not found' }, { status: 404 });
     }
 
-    const dispatches = await db.collection('dispatches').find({}).toArray();
+    // Find all rides that are heading to the hospital (for this simple demo, any accepted/en_route ride)
+    const dispatches = await db.collection('rides').find({ status: { $in: ['accepted', 'en_route'] } }).toArray();
 
     return NextResponse.json({
       success: true,
       hospital,
-      incomingAmbulances: dispatches.length ? dispatches : INITIAL_DISPATCHES,
+      incomingAmbulances: dispatches,
       source: 'mongodb'
     });
   } catch (error) {
     console.error('Hospital API GET Error:', error);
-    return NextResponse.json({
-      success: true,
-      hospital: INITIAL_HOSPITALS[0],
-      incomingAmbulances: INITIAL_DISPATCHES,
-      source: 'mock',
-      error: error.message
-    });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 

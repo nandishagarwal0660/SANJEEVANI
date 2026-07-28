@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ambulance, Building2, Stethoscope, HeartPulse, KeyRound, UserPlus, X, CheckCircle2 } from 'lucide-react';
+import { setStoredUser } from '@/lib/auth';
 
 /* ─── Role config ──────────────────────────────────────────── */
 const ROLES = {
@@ -93,14 +94,29 @@ export default function RoleAuthModal({ isOpen, onClose }) {
     setForm((p) => ({ ...p, [id]: val }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setDone(true);
+    try {
+      const res = await fetch('/api/auth/profiles');
+      const data = await res.json();
+      if (data.profiles) {
+        // Find the profile matching the selected role for now
+        // In a real app, you'd match email/password here.
+        const profile = data.profiles.find(p => p.role === role);
+        if (profile) {
+          setStoredUser(profile);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch profile", err);
+    }
+
     setTimeout(() => {
       setDone(false);
       onClose();
       router.push(`/dashboard/${role}`);
-    }, 1800);
+    }, 1000);
   }
 
   return (

@@ -6,10 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import IntakeConsole   from '@/components/IntakeConsole';
 import TriageResult    from '@/components/TriageResult';
 import AmbulanceModal  from '@/components/AmbulanceModal';
+import RideBookingModal from '@/components/RideBookingModal';
 import NearbyFacilities from '@/components/NearbyFacilities';
 import RoleAuthModal   from '@/components/RoleAuthModal';
 import ReferredDoctors from '@/components/ReferredDoctors';
-import { Moon, Sun, User, Phone } from 'lucide-react';
+import { Moon, Sun, User, Phone, Ambulance } from 'lucide-react';
+
 
 /* ── Tiny sparkline helper ─────────────────────────────── */
 function Sparkline({ points, color = '#10B981' }) {
@@ -105,6 +107,7 @@ export default function HomePage() {
   const [result, setResult]             = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sosOpen, setSosOpen]           = useState(false);
+  const [bookAmbulanceOpen, setBookAmbulanceOpen] = useState(false);
   const [careType, setCareType]         = useState(null);
   const [careTrigger, setCareTrigger]   = useState(0);
   const [showTelehealth, setShowTelehealth] = useState(false);
@@ -163,6 +166,7 @@ export default function HomePage() {
     <div className={`app-root ${isDark ? 'is-dark' : 'is-light'}`}>
 
       <AmbulanceModal isOpen={sosOpen} onClose={() => setSosOpen(false)} severityColor={result?.Severity_Color} />
+      <RideBookingModal isOpen={bookAmbulanceOpen} onClose={() => setBookAmbulanceOpen(false)} />
       <RoleAuthModal  isOpen={authOpen} onClose={() => setAuthOpen(false)} />
 
       {/* ══ NAVBAR ══════════════════════════════════════════ */}
@@ -196,6 +200,10 @@ export default function HomePage() {
             <Phone size={14} />
             SOS
           </a>
+          {/* Book Ambulance */}
+          <button onClick={() => setBookAmbulanceOpen(true)} className="login-btn !bg-red-500/10 !text-red-500 !border-red-500/30 hover:!bg-red-500/20">
+            <Ambulance size={15} /> Book Ambulance
+          </button>
           {/* Login */}
           <button onClick={() => setAuthOpen(true)} className="login-btn">
             <User size={15} /> Login
@@ -319,16 +327,16 @@ export default function HomePage() {
                   )}
                 </motion.div>
               ))}
-              <div ref={chatEndRef} />
             </div>
 
             {/* Triage result */}
             <TriageResult
               result={result}
               isProcessing={isProcessing}
-              onSOS={() => { window.location.href = 'tel:112'; }}
+              onSOS={() => { setSosOpen(true); }}
               onFindCare={handleFindCare}
               onTelehealth={() => setShowTelehealth(true)}
+              onBookAmbulance={() => setBookAmbulanceOpen(true)}
             />
 
             {/* Referred doctors */}
@@ -344,6 +352,9 @@ export default function HomePage() {
                 <NearbyFacilities facilityType={careType} trigger={careTrigger} />
               </div>
             )}
+            
+            {/* Invisible div to ensure we always scroll to the very bottom of all content */}
+            <div ref={chatEndRef} className="h-4 shrink-0" />
           </div>
 
           {/* Console bottom — chat input + triage form */}

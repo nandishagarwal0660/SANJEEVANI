@@ -1,26 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
-import { INITIAL_DISPATCHES } from '../seed/route';
-
 export async function GET() {
   try {
     const db = await getDatabase();
     if (!db) {
-      // Fallback if MongoDB is not connected
-      return NextResponse.json({ success: true, dispatches: INITIAL_DISPATCHES, source: 'mock' });
+      throw new Error("Database connection unavailable");
     }
 
-    const dispatches = await db.collection('dispatches').find({}).toArray();
-    if (dispatches.length === 0) {
-      // Auto seed if empty
-      await db.collection('dispatches').insertMany(INITIAL_DISPATCHES);
-      return NextResponse.json({ success: true, dispatches: INITIAL_DISPATCHES, source: 'mongodb' });
-    }
+    const dispatches = await db.collection('rides').find({ status: 'en_route' }).toArray();
 
     return NextResponse.json({ success: true, dispatches, source: 'mongodb' });
   } catch (error) {
     console.error('Ambulance API GET Error:', error);
-    return NextResponse.json({ success: true, dispatches: INITIAL_DISPATCHES, source: 'mock', error: error.message });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 

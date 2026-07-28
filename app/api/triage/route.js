@@ -11,6 +11,7 @@
 
 import { NextResponse } from 'next/server';
 import { SANJEEVANI_SYSTEM_PROMPT } from '@/lib/systemPrompt';
+import { getDatabase } from '@/lib/mongodb';
 
 // ── Emergency keyword detection (force RED) ────────────────────────
 const EMERGENCY_PATTERNS = [
@@ -63,7 +64,7 @@ async function callMedGemma(userMessage) {
   console.log('[Sanjeevani] Attempting HF MedGemma-27B call...');
 
   const response = await fetch(
-    'https://api-inference.huggingface.co/models/google/medgemma-27b-text-it/v1/chat/completions',
+    'https://api-inference.huggingface.co/models/yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF/v1/chat/completions',
     {
       method: 'POST',
       headers: {
@@ -71,7 +72,7 @@ async function callMedGemma(userMessage) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/medgemma-27b-text-it',
+        model: 'yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF',
         messages: [
           { role: 'system', content: SANJEEVANI_SYSTEM_PROMPT },
           { role: 'user',   content: userMessage },
@@ -102,7 +103,7 @@ async function callMedGemma(userMessage) {
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error(`HF returned empty content. Full response: ${JSON.stringify(data).slice(0, 300)}`);
 
-  console.log('[Sanjeevani] HF medgemma-27b-text-it response received ✓');
+  console.log('[Sanjeevani] HF gemma-4-12B-agentic response received ✓');
   return content;
 }
 
@@ -174,28 +175,28 @@ function getMockData(narrative, isEmergency) {
       Severity_Color: 'RED',
       Recommended_Action: 'Hospital+Ambulance',
       Required_Specialization: 'Emergency Medicine / Cardiologist',
-      Clinical_Reasoning: 'Emergency keywords detected. Forced RED triage per safety protocol.',
-      Patient_Communication: 'Aapki halat bahut gambhir lag rahi hai. Abhi turant ambulance bulao — 112 pe call karo. Seedha let jao aur hilne ki koshish mat karo. Main yahan hoon, ghabrao mat.\n\nDisclaimer: Main ek AI assistant hoon — yeh diagnosis nahi hai. Turant 112 call karein.',
-      Immediate_Actions: ['Abhi 112 call karein', 'Seedha let jao', 'Tight kapde dhile karo', 'Kuch bhi khane ya pine se bachein'],
-      Red_Flags_Detected: ['Chest pain / Emergency symptom detected'],
-      Extracted_Symptoms: ['Chest pain / Critical symptom'],
+      Clinical_Reasoning: 'Emergency keywords detected. Forced RED triage per safety protocol. Note: AI models are currently offline.',
+      Patient_Communication: 'Aapki halat bahut gambhir lag rahi hai. Abhi turant ambulance bulao — 112 pe call karo. \n\n[WARNING: AI is currently unavailable. This is an automated safety alert.]',
+      Immediate_Actions: ['Abhi 112 call karein', 'Seedha let jao'],
+      Red_Flags_Detected: ['Emergency symptom detected'],
+      Extracted_Symptoms: ['Critical symptom'],
       Estimated_Duration: 'Unknown',
       Pain_Level_Estimate: 8,
       _source: 'mock_emergency',
     };
   }
   return {
-    Severity_Color: 'GREEN',
+    Severity_Color: 'YELLOW',
     Recommended_Action: 'Doctor Only',
     Required_Specialization: 'General Physician',
-    Clinical_Reasoning: 'Symptoms suggest a non-urgent condition. Normal biometrics assumed. Both AI models unavailable — using mock data. Check server logs for details.',
-    Patient_Communication: 'Aapki takleef samajh aa rahi hai. Abhi koi emergency nahi hai, lekin ek doctor se milna zaroori hai. Aaram karein, paani peete rahein, aur agar symptoms badh jayein toh turant doctor ke paas jaayen.\n\nDisclaimer: Main ek AI assistant hoon — yeh diagnosis nahi hai. Life-threatening emergency mein turant 112 call karein.',
-    Immediate_Actions: ['Aaram karein', 'Paani aur ORS peete rahein', 'Bukhar ho toh paracetamol lein (doctor ki salah se)', '24 ghante mein doctor se milein'],
+    Clinical_Reasoning: 'AI models are currently unavailable due to high traffic or connectivity issues.',
+    Patient_Communication: '⚠️ Warning: AI triage is currently unavailable. Please connect to available doctors from the options below for a live consultation.',
+    Immediate_Actions: ['Connect with an available doctor below'],
     Red_Flags_Detected: [],
     Extracted_Symptoms: narrative.split(' ').slice(0, 3),
     Estimated_Duration: 'Unknown',
     Pain_Level_Estimate: 3,
-    _source: 'mock_fallback',
+    _source: 'ai_unavailable_warning',
   };
 }
 
@@ -213,7 +214,7 @@ export async function POST(request) {
     const hfPresent = !!process.env.HF_TOKEN;
     const geminiPresent = !!process.env.GEMINI_API_KEY;
     console.log(`[Sanjeevani] Env: HF_TOKEN=${hfPresent} | GEMINI_API_KEY=${geminiPresent}`);
-    console.log(`[Sanjeevani] Models: HF=google/medgemma-27b-text-it | Gemini=gemini-2.5-flash`);
+    console.log(`[Sanjeevani] Models: HF=yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF | Gemini=gemini-2.5-flash`);
 
     const isEmergency = detectEmergency(narrative);
 
@@ -275,11 +276,24 @@ export async function POST(request) {
       parsed.Recommended_Action = 'Hospital+Ambulance';
     }
 
-    return NextResponse.json({
+    const finalResult = {
       ...parsed,
       _source: source,
       ambulance_triggered: parsed.Severity_Color === 'RED',
-    });
+    };
+
+    // Asynchronously save to MongoDB
+    getDatabase().then(db => {
+      if (db) {
+        db.collection('triage_history').insertOne({
+          timestamp: new Date(),
+          request: { narrative, language, biometrics, bodyRegion },
+          result: finalResult
+        }).catch(e => console.warn('MongoDB insert failed:', e.message));
+      }
+    }).catch(e => console.warn('MongoDB connection failed:', e.message));
+
+    return NextResponse.json(finalResult);
   } catch (err) {
     console.error('[Sanjeevani] Triage API fatal error:', err);
     return NextResponse.json({ error: 'Internal server error.', detail: err.message }, { status: 500 });

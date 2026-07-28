@@ -2,23 +2,111 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Stethoscope, Star, MapPin, Phone, ArrowRight, CheckCircle } from 'lucide-react';
-import { getDoctorsBySpec } from '@/lib/doctors';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Stethoscope, Star, MapPin, Phone, ArrowRight, CheckCircle, CalendarCheck, X } from 'lucide-react';
+
+function QuickBookModal({ doctor, onClose }) {
+  const [form, setForm] = useState({ patientName: '', phone: '', symptoms: '', date: '', time: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const times = ['09:00 AM','10:00 AM','11:00 AM','02:00 PM','03:00 PM','04:00 PM'];
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, doctorId: doctor.id, doctorName: doctor.name, role: 'doctor' }),
+      });
+      setDone(true);
+      setTimeout(onClose, 2200);
+    } catch { setSubmitting(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+        className="w-full max-w-sm bg-[#0d0f16] border border-blue-500/25 rounded-2xl shadow-2xl overflow-hidden"
+        onClick={e => e.stopPropagation()}>
+        <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-cyan-500" />
+        <div className="p-5">
+          {done ? (
+            <div className="text-center py-6">
+              <div className="text-4xl mb-3">✅</div>
+              <p className="font-semibold text-slate-100">Appointment Requested!</p>
+              <p className="text-sm text-slate-400 mt-1">Sent to Dr. {doctor.name}</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="font-bold text-slate-100">{doctor.name}</p>
+                  <p className="text-xs text-blue-400">{doctor.spec}</p>
+                </div>
+                <button onClick={onClose} className="h-7 w-7 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center"><X size={14} /></button>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <input required value={form.patientName} onChange={e => setForm(p=>({...p,patientName:e.target.value}))}
+                  placeholder="Your full name *" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 transition-all" />
+                <input required value={form.phone} onChange={e => setForm(p=>({...p,phone:e.target.value}))}
+                  placeholder="Phone number *" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 transition-all" />
+                <div className="grid grid-cols-2 gap-2">
+                  <input required type="date" value={form.date} min={new Date().toISOString().split('T')[0]}
+                    onChange={e => setForm(p=>({...p,date:e.target.value}))}
+                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500/50 transition-all" />
+                  <select required value={form.time} onChange={e => setForm(p=>({...p,time:e.target.value}))}
+                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500/50 transition-all">
+                    <option value="">Time slot</option>
+                    {times.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <textarea required value={form.symptoms} onChange={e => setForm(p=>({...p,symptoms:e.target.value}))}
+                  placeholder="Brief symptom description *" rows={2}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 transition-all resize-none" />
+                <button type="submit" disabled={submitting}
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold text-sm transition-all">
+                  {submitting ? 'Booking...' : '📅 Book Appointment'}
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 
 export default function ReferredDoctors({ specialization }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [doctors, setDoctors] = useState([]);
+  const [bookingDoctor, setBookingDoctor] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => {
-      // Show max 2 doctors in the preview card
-      setDoctors(getDoctorsBySpec(specialization).slice(0, 2));
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(t);
+    let active = true;
+    const fetchDoctors = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/doctors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ specialization })
+        });
+        const data = await res.json();
+        if (active && data.doctors) {
+          setDoctors(data.doctors.slice(0, 2));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchDoctors();
+    return () => { active = false; };
   }, [specialization]);
 
   return (
@@ -59,7 +147,11 @@ export default function ReferredDoctors({ specialization }) {
               <div className="h-7 w-7 rounded-full bg-white/5" />
             </div>
           ))
-        ) : (
+          ) : doctors.length === 0 ? (
+            <div className="py-8 px-4 text-center">
+              <p className="text-[12px] text-blue-400/60">No available specialists found in your area at the moment.</p>
+            </div>
+          ) : (
           doctors.map((doc, i) => (
             <motion.div
               key={doc.id}
@@ -94,18 +186,30 @@ export default function ReferredDoctors({ specialization }) {
                 )}
               </div>
 
-              {/* Call button */}
-              <a
-                href={`tel:${doc.phone}`}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-300 hover:bg-blue-500/20 hover:border-blue-500/30 hover:text-blue-300 transition-all"
-              >
-                <Phone size={13} />
-              </a>
+      {/* Call + Book buttons */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <a
+                  href={`tel:${doc.phone}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-300 hover:bg-blue-500/20 hover:border-blue-500/30 hover:text-blue-300 transition-all"
+                >
+                  <Phone size={13} />
+                </a>
+                <button
+                  onClick={() => setBookingDoctor(doc)}
+                  className="flex h-8 items-center justify-center gap-1 rounded-full px-3 bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600 hover:text-white text-[11px] font-semibold transition-all"
+                >
+                  <CalendarCheck size={12} />
+                  Book
+                </button>
+              </div>
             </motion.div>
           ))
         )}
       </div>
 
+      <AnimatePresence>
+        {bookingDoctor && <QuickBookModal doctor={bookingDoctor} onClose={() => setBookingDoctor(null)} />}
+      </AnimatePresence>
     </div>
   );
 }
