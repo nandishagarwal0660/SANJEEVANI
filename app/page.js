@@ -24,11 +24,12 @@ export default function HomePage() {
 
   // Auth modal states
   const [authOpen, setAuthOpen]           = useState(false);
-  const [authMode, setAuthMode]           = useState('login'); // 'login' | 'register'
+  const [authMode, setAuthMode]           = useState('login');
 
   // Theme: 'dark' | 'light'
   const [theme, setTheme]                 = useState('dark');
   const [isMounted, setIsMounted]         = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Chat messages (general comment/chat)
   const [chatMessages, setChatMessages]   = useState([
@@ -137,81 +138,138 @@ export default function HomePage() {
       <RoleAuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
 
       {/* ── Navbar ────────────────────────────────── */}
-      <header className="glass-nav sticky top-0 z-40 flex items-center justify-between px-6 py-3.5 sm:px-10">
-        {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-mint-500/15 border border-mint-500/30 text-mint-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
+      <header className="glass-nav sticky top-0 z-40 px-4 sm:px-6 lg:px-10">
+        <div className="flex items-center justify-between h-14">
+          {/* Brand */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-display text-[17px] font-bold tracking-tight nav-brand">SANJEEVANI</span>
+              <span className="hidden md:inline-block mono-tag text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">
+                AI Triage · MedGemma-27B
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="font-display text-[17px] font-bold tracking-tight nav-brand">SANJEEVANI</span>
-            <span className="ml-2 hidden sm:inline-block mono-tag text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
-              AI Triage · MedGemma-27B
-            </span>
+
+          {/* Desktop right nav actions */}
+          <div className="hidden sm:flex items-center gap-2">
+            {/* Live badge */}
+            <div className="hidden lg:flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="mono-tag text-slate-500">MedGemma-27B · Live</span>
+            </div>
+
+            {/* Theme Toggle */}
+            <button
+              id="theme-toggle-btn"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="theme-toggle-btn flex h-9 w-9 items-center justify-center rounded-full border transition-all"
+            >
+              <AnimatePresence mode="wait">
+                {isDark ? (
+                  <motion.svg key="sun" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </motion.svg>
+                ) : (
+                  <motion.svg key="moon" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </motion.svg>
+                )}
+              </AnimatePresence>
+            </button>
+
+            {/* SOS — direct call to 112 */}
+            <a
+              id="header-sos-btn"
+              href="tel:112"
+              className="sos-pulse-btn flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-950/50 px-3.5 py-2 font-display text-[13px] font-bold text-red-300 hover:bg-red-900/60 transition-all"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+              </span>
+              SOS
+            </a>
+
+            {/* Login/Register Button */}
+            <button
+              id="login-btn"
+              onClick={() => { setAuthMode('login'); setAuthOpen(true); }}
+              className="login-nav-btn flex items-center gap-2 rounded-full border px-4 py-2 font-display text-[13px] font-semibold transition-all"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Login
+            </button>
+          </div>
+
+          {/* Mobile right actions */}
+          <div className="flex sm:hidden items-center gap-2">
+            <a href="tel:112"
+              className="flex items-center gap-1 rounded-full border border-red-500/40 bg-red-950/50 px-3 py-1.5 font-display text-[12px] font-bold text-red-300"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
+              SOS
+            </a>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-300"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                {mobileMenuOpen ? (
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                ) : (
+                  <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>
+                )}
+              </svg>
+            </button>
           </div>
         </div>
 
-        {/* Right nav actions */}
-        <div className="flex items-center gap-2">
-          {/* Live badge */}
-          <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-mint-400 animate-pulse" />
-            <span className="mono-tag text-slate-500">MedGemma-27B · Live</span>
-          </div>
-
-          {/* Theme Toggle */}
-          <button
-            id="theme-toggle-btn"
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="theme-toggle-btn flex h-9 w-9 items-center justify-center rounded-full border transition-all"
-          >
-            <AnimatePresence mode="wait">
-              {isDark ? (
-                <motion.svg key="sun" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                  <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                </motion.svg>
-              ) : (
-                <motion.svg key="moon" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                </motion.svg>
-              )}
-            </AnimatePresence>
-          </button>
-
-          {/* SOS — direct call to 112 */}
-          <a
-            id="header-sos-btn"
-            href="tel:112"
-            className="sos-pulse-btn flex items-center gap-2 rounded-full border border-red-500/40 bg-red-950/50 px-4 py-2 font-display text-[13px] font-bold text-red-300 hover:bg-red-900/60 transition-all"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-            </span>
-            SOS
-          </a>
-
-          {/* Login/Register Button */}
-          <button
-            id="login-btn"
-            onClick={() => { setAuthMode('login'); setAuthOpen(true); }}
-            className="login-nav-btn flex items-center gap-2 rounded-full border px-4 py-2 font-display text-[13px] font-semibold transition-all"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            Login
-          </button>
-        </div>
+        {/* Mobile dropdown menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="sm:hidden border-t border-white/6 overflow-hidden"
+            >
+              <div className="flex flex-col gap-2 py-3 px-1">
+                <button
+                  onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 text-slate-300 text-sm"
+                >
+                  <span>{isDark ? '☀️' : '🌙'}</span>
+                  <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+                </button>
+                <button
+                  onClick={() => { setAuthOpen(true); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 text-slate-300 text-sm"
+                >
+                  <span>👤</span>
+                  <span>Login / Register</span>
+                </button>
+                <div className="flex items-center gap-1.5 px-3 py-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-mono text-[11px] text-slate-500 uppercase tracking-wider">MedGemma-27B · Live</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ── Main Split Layout ─────────────────────── */}
@@ -222,48 +280,76 @@ export default function HomePage() {
           initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
 
           {/* Status pill */}
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-mint-500/25 bg-mint-500/8 px-3.5 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-mint-400 animate-pulse" />
-            <p className="mono-tag text-mint-400">Rural Health Triage · Active</p>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/8 px-3.5 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <p className="mono-tag text-emerald-400">Rural Health Triage · Active</p>
           </div>
 
-          <h1 className="left-headline font-display text-4xl font-bold leading-tight sm:text-[48px] lg:text-[52px]">
-            Language should<br/>never delay{' '}
-            <span className="relative inline-block text-mint-400">
+          <h1 className="left-headline font-display font-bold leading-tight" style={{ fontSize: 'clamp(2rem, 5vw, 3.25rem)' }}>
+            Language should<br className="hidden sm:block"/>never delay{' '}
+            <span className="relative inline-block text-emerald-400">
               care
-              <svg className="absolute -bottom-2 left-0 w-full text-mint-500/40" viewBox="0 0 100 10" preserveAspectRatio="none">
+              <svg className="absolute -bottom-2 left-0 w-full text-emerald-500/40" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <path d="M0 5 Q 50 15 100 5" stroke="currentColor" strokeWidth="4" fill="none"/>
               </svg>
             </span>.
           </h1>
 
-          <p className="left-body mt-7 text-[15px] leading-relaxed max-w-lg">
-            Speak or type in <span className="left-emphasis font-medium">Hindi, Bhojpuri, Marathi</span> or Chhattisgarhi.
-            MedGemma-27B normalizes your symptoms into clinical terms, scores severity against{' '}
-            <span className="text-mint-400">WHO triage guidelines</span>, and routes you to the right care — instantly.
+          <p className="left-body mt-6 text-[15px] leading-relaxed max-w-lg">
+            Speak or type in <span className="left-emphasis font-semibold">Hindi, Bhojpuri, Marathi</span> or Chhattisgarhi.
+            MedGemma-27B normalizes symptoms into clinical terms, scores severity against{' '}
+            <span className="text-emerald-400 font-medium">WHO triage guidelines</span>, and routes you to the right care — instantly.
           </p>
-          <p className="left-body-muted mt-4 text-[14px] leading-relaxed max-w-lg">
-            Designed for <span className="left-emphasis font-medium">rural &amp; semi-urban India</span> — covering areas with limited
+          <p className="left-body-muted mt-3 text-[14px] leading-relaxed max-w-lg">
+            Designed for <span className="left-emphasis font-semibold">rural &amp; semi-urban India</span> — covering areas with limited
             healthcare access and multilingual populations.
           </p>
 
           {/* Feature tags */}
-          <div className="mt-8 flex flex-wrap gap-2">
+          <div className="mt-7 flex flex-wrap gap-2">
             {['WHO-aligned triage', 'Multilingual AI', 'Emergency SOS', 'Biometric inputs', 'ASHA/PHC routing', 'Offline-capable'].map((tag) => (
-              <span key={tag} className="feature-tag rounded-full border px-3.5 py-1.5 font-mono text-[11px] font-medium transition-all cursor-default">
+              <span key={tag} className="feature-tag rounded-full border px-3 py-1.5 font-mono text-[11px] font-medium transition-all cursor-default hover-lift">
                 {tag}
               </span>
             ))}
           </div>
 
-          {/* Stats */}
-          <div className="mt-10 grid grid-cols-3 gap-4">
+          {/* Role Quick Access Buttons */}
+          <div className="mt-6 grid grid-cols-3 gap-2">
             {[
-              { val: '27B', label: 'Model Params', color: 'text-mint-400' },
-              { val: '5+',  label: 'Languages',    color: 'text-cerulean-500' },
+              { emoji: '🚑', label: 'Ambulance', role: 'ambulance', color: 'border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300' },
+              { emoji: '👨‍⚕️', label: 'Doctor', role: 'doctor', color: 'border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300' },
+              { emoji: '🏥', label: 'Hospital', role: 'hospital', color: 'border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300' },
+            ].map(({ emoji, label, role, color }) => (
+              <button
+                key={label}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    const mockProfiles = {
+                      ambulance: { id: 'AMB-102', role: 'ambulance', driver: 'Rajesh Kumar', paramedic: 'Dr. Priya Sharma' },
+                      doctor: { id: 'DOC-8842', role: 'doctor', name: 'Dr. Ananya Roy', specialization: 'Emergency Medicine Specialist' },
+                      hospital: { id: 'HOSP-001', role: 'hospital', name: 'Apex City Emergency Hospital & Trauma Center' }
+                    };
+                    localStorage.setItem('sanjeevani_user', JSON.stringify(mockProfiles[role]));
+                    window.location.href = `/dashboard/${role}`;
+                  }
+                }}
+                className={`rounded-xl border px-3 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover-lift ${color}`}
+              >
+                <span>{emoji}</span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Stats */}
+          <div className="mt-6 grid grid-cols-3 gap-3">
+            {[
+              { val: '27B', label: 'Model Params', color: 'text-emerald-400' },
+              { val: '5+',  label: 'Languages',    color: 'text-sky-400' },
               { val: '<3s', label: 'Avg. Triage',  color: 'text-amber-400' },
             ].map(({ val, label, color }) => (
-              <div key={label} className="stat-card rounded-2xl border p-4 text-center backdrop-blur-sm transition-all">
+              <div key={label} className="stat-card rounded-2xl border p-3.5 text-center backdrop-blur-sm transition-all hover-lift">
                 <p className={`font-display text-2xl font-bold ${color}`}>{val}</p>
                 <p className="stat-label mono-tag mt-1">{label}</p>
               </div>
