@@ -11,6 +11,7 @@ import EntityPanel      from '@/components/EntityPanel';
 import SummaryPanel     from '@/components/SummaryPanel';
 import AcuityGauge      from '@/components/AcuityGauge';
 import NearbyFacilities from '@/components/NearbyFacilities';
+import RoleAuthModal    from '@/components/RoleAuthModal';
 
 export default function HomePage() {
   const [result, setResult]               = useState(null);
@@ -27,13 +28,18 @@ export default function HomePage() {
 
   // Theme: 'dark' | 'light'
   const [theme, setTheme]                 = useState('dark');
+  const [isMounted, setIsMounted]         = useState(false);
 
   // Chat messages (general comment/chat)
   const [chatMessages, setChatMessages]   = useState([
-    { id: 1, from: 'ai', text: 'Namaste 🙏 I am your AI health triage assistant. Describe your symptoms below, or ask me anything about health.', time: new Date() },
+    { id: 1, from: 'ai', text: 'Namaste 🙏 I am your AI health triage assistant. Describe your symptoms below, or ask me anything about health.', time: '10:00 PM' },
   ]);
   const [chatInput, setChatInput]         = useState('');
   const chatEndRef                        = useRef(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Apply theme to <html>
   useEffect(() => {
@@ -45,10 +51,14 @@ export default function HomePage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
+  function getFormattedNow() {
+    return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  }
+
   function sendChatMessage(e) {
     e.preventDefault();
     if (!chatInput.trim()) return;
-    const userMsg = { id: Date.now(), from: 'user', text: chatInput.trim(), time: new Date() };
+    const userMsg = { id: Date.now(), from: 'user', text: chatInput.trim(), time: getFormattedNow() };
     setChatMessages((prev) => [...prev, userMsg]);
     setChatInput('');
     // Simulate AI reply after short delay
@@ -57,7 +67,7 @@ export default function HomePage() {
         id: Date.now() + 1,
         from: 'ai',
         text: 'I understand your concern. For accurate triage, please fill in your symptoms in the form below and click "Run Triage →". For emergencies, call 112 immediately.',
-        time: new Date(),
+        time: getFormattedNow(),
       }]);
     }, 900);
   }
@@ -72,7 +82,7 @@ export default function HomePage() {
       id: Date.now(),
       from: 'user',
       text: `🩺 Triage submitted: "${inputs.narrative.slice(0, 80)}${inputs.narrative.length > 80 ? '…' : ''}"`,
-      time: new Date(),
+      time: getFormattedNow(),
     }]);
 
     try {
@@ -88,7 +98,7 @@ export default function HomePage() {
         id: Date.now() + 1,
         from: 'ai',
         text: `✅ Triage complete! Severity: ${data.Severity_Color ?? 'Unknown'}. See results below.`,
-        time: new Date(),
+        time: getFormattedNow(),
       }]);
       if (data.Severity_Color === 'RED' || data.ambulance_triggered) {
         setSosOpen(true);
@@ -99,7 +109,7 @@ export default function HomePage() {
         id: Date.now() + 2,
         from: 'ai',
         text: '⚠️ Could not complete triage. Please check your connection or try again.',
-        time: new Date(),
+        time: getFormattedNow(),
       }]);
     } finally {
       setIsProcessing(false);
@@ -123,112 +133,8 @@ export default function HomePage() {
         severityColor={result?.Severity_Color}
       />
 
-      {/* ── Auth Modal (Login / Register) ─────────── */}
-      <AnimatePresence>
-        {authOpen && (
-          <motion.div
-            className="sos-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setAuthOpen(false)}
-          >
-            <motion.div
-              className="auth-modal relative w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl"
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Top gradient accent */}
-              <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #34C98E, #4DA6D9, #34C98E)' }} />
-              <div className="p-6">
-                {/* Logo + title */}
-                <div className="mb-5 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint-500/15 border border-mint-500/30 text-mint-400">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="auth-title font-display text-[17px] font-bold">
-                      {authMode === 'login' ? 'Welcome back' : 'Create account'}
-                    </h2>
-                    <p className="auth-subtitle text-[12px]">
-                      {authMode === 'login' ? 'Sign in to Sanjeevani' : 'Join Sanjeevani — free forever'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Tab switcher */}
-                <div className="auth-tab-bar mb-5 flex rounded-xl p-1 gap-1">
-                  {['login', 'register'].map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setAuthMode(mode)}
-                      className={`auth-tab flex-1 rounded-lg py-1.5 font-display text-[12px] font-semibold capitalize transition-all ${
-                        authMode === mode ? 'auth-tab-active' : 'auth-tab-inactive'
-                      }`}
-                    >
-                      {mode === 'login' ? 'Sign In' : 'Register'}
-                    </button>
-                  ))}
-                </div>
-
-                <AnimatePresence mode="wait">
-                  <motion.form
-                    key={authMode}
-                    initial={{ opacity: 0, x: authMode === 'login' ? -10 : 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-3"
-                    onSubmit={(e) => { e.preventDefault(); setAuthOpen(false); }}
-                  >
-                    {authMode === 'register' && (
-                      <div>
-                        <label className="mono-tag text-slate-500 block mb-1.5">Full Name</label>
-                        <input type="text" id="reg-name" placeholder="Ramesh Kumar"
-                          className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
-                      </div>
-                    )}
-                    <div>
-                      <label className="mono-tag text-slate-500 block mb-1.5">Email / Phone</label>
-                      <input type="text" id="login-email" placeholder="you@example.com or +91 XXXXXX"
-                        className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
-                    </div>
-                    <div>
-                      <label className="mono-tag text-slate-500 block mb-1.5">Password</label>
-                      <input type="password" id="login-password" placeholder="••••••••"
-                        className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
-                    </div>
-                    {authMode === 'register' && (
-                      <div>
-                        <label className="mono-tag text-slate-500 block mb-1.5">Confirm Password</label>
-                        <input type="password" id="reg-confirm" placeholder="••••••••"
-                          className="auth-input w-full rounded-xl px-4 py-2.5 text-[13px] font-mono focus:outline-none transition-all" />
-                      </div>
-                    )}
-                    <button type="submit" id="auth-submit-btn"
-                      className="w-full rounded-xl bg-mint-600 border border-mint-500/70 py-2.5 font-display text-[14px] font-semibold text-white hover:bg-mint-500 transition-all active:scale-[0.98] mt-1">
-                      {authMode === 'login' ? 'Sign In →' : 'Create Account →'}
-                    </button>
-                    <p className="text-center text-[12px] text-slate-500 pt-1">
-                      {authMode === 'login' ? "No account? " : "Already have one? "}
-                      <button type="button"
-                        className="text-mint-400 hover:text-mint-300 transition-colors font-semibold"
-                        onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>
-                        {authMode === 'login' ? 'Register free' : 'Sign in'}
-                      </button>
-                    </p>
-                  </motion.form>
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── Role Auth Modal (Ambulance / Doctor / Hospital) ─── */}
+      <RoleAuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
 
       {/* ── Navbar ────────────────────────────────── */}
       <header className="glass-nav sticky top-0 z-40 flex items-center justify-between px-6 py-3.5 sm:px-10">
@@ -453,7 +359,7 @@ export default function HomePage() {
                       {msg.from === 'ai' && <p className="text-[11px] font-semibold text-mint-400 mb-1">Sanjeevani AI</p>}
                       <p className="text-[13px] leading-relaxed chat-msg-text">{msg.text}</p>
                       <p className="text-[10px] mt-1 chat-time">
-                        {msg.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        {typeof msg.time === 'string' ? msg.time : msg.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </motion.div>
