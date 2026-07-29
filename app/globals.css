@@ -752,6 +752,24 @@ body {
   padding: 10px 12px 12px;
 }
 
+[data-theme='light'] #narrative-input,
+.is-light #narrative-input {
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+}
+
+[data-theme='light'] #narrative-input::placeholder,
+.is-light #narrative-input::placeholder {
+  color: #64748B !important;
+  opacity: 1 !important;
+}
+
+[data-theme='light'] .clinical-caret::after,
+.is-light .clinical-caret::after {
+  color: #059669 !important;
+}
+
 /* ══════════════════════════════════════════════════════════
    GLASS CARD (for triage result etc.)
    ══════════════════════════════════════════════════════════ */

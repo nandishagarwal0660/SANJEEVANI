@@ -98,7 +98,7 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
     setIsListening(true);
   }
 
-  const inputCls = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-slate-200 text-[12px] placeholder:text-slate-600 focus:outline-none focus:border-mint-500/60 focus:bg-white/8 transition-all font-mono';
+  const inputCls = 'w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-200 text-[12px] placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 focus:bg-white dark:focus:bg-white/8 transition-all font-mono';
 
   return (
     <div className="intake-form-wrapper">
@@ -130,8 +130,8 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
             onClick={() => setLanguage(l.code)}
             className={`rounded-full border px-3 py-1 font-display text-[11px] font-semibold transition-all ${
               language === l.code
-                ? 'border-mint-500/50 bg-mint-500/15 text-mint-300'
-                : 'border-white/10 bg-white/5 text-slate-400 hover:border-mint-500/30 hover:text-mint-400'
+                ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold'
+                : 'border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-400 hover:border-emerald-500/30 hover:text-emerald-600 dark:hover:text-emerald-400'
             }`}
           >
             {l.label}
@@ -148,10 +148,10 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
             onChange={(e) => handleNarrativeChange(e.target.value)}
             placeholder="Bolein ya type karein... (e.g. Mere seene mein dard ho raha hai)"
             rows={3}
-            className={`w-full resize-none rounded-xl border px-4 py-3 font-mono text-[13px] leading-relaxed transition-all placeholder:text-slate-600 focus:outline-none focus:ring-0 ${
+            className={`w-full resize-none rounded-xl border px-4 py-3 font-mono text-[13px] font-medium leading-relaxed transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-0 ${
               isEmergency
-                ? 'border-red-500/50 bg-red-950/30 text-slate-100 focus:border-red-400/60'
-                : 'border-white/10 bg-white/5 text-slate-200 focus:border-mint-500/50 focus:bg-white/8'
+                ? 'border-red-500/50 bg-red-50 dark:bg-red-950/30 text-red-950 dark:text-slate-100 focus:border-red-500'
+                : 'border-black/15 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:bg-white dark:focus:bg-white/8 shadow-sm'
             }`}
           />
           {!narrative && (
@@ -163,7 +163,7 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
         <button
           type="button"
           onClick={() => setShowBiometrics((p) => !p)}
-          className="flex items-center gap-1.5 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 font-display text-[11px] font-medium text-slate-400 hover:border-cerulean-500/40 hover:text-cerulean-300 transition-all"
+          className="flex items-center gap-1.5 self-start rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-1 font-display text-[11px] font-medium text-slate-700 dark:text-slate-400 hover:border-emerald-500/40 hover:text-emerald-600 dark:hover:text-emerald-300 transition-all"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           {showBiometrics ? 'Hide' : 'Add'} Vitals (SpO₂, BPM, BP, Temp)
@@ -186,7 +186,7 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
                 { key: 'temperature', label: 'Temp °F',   placeholder: '98.6' },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label className="mono-tag text-slate-500 block mb-1">{label}</label>
+                  <label className="mono-tag text-slate-600 dark:text-slate-500 block mb-1">{label}</label>
                   <input
                     type="number"
                     step={key === 'temperature' ? '0.1' : '1'}
@@ -210,10 +210,10 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 font-display text-[12px] font-medium transition-all ${
               isListening
                 ? 'border-red-500/40 bg-red-950/50 text-red-300'
-                : 'border-white/10 bg-white/5 text-slate-400 hover:border-cerulean-500/40 hover:text-cerulean-300 hover:bg-cerulean-950/20'
+                : 'border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-slate-700 dark:text-slate-400 hover:border-emerald-500/40 hover:text-emerald-600 dark:hover:text-emerald-300'
             }`}
           >
-            <span className={`h-2 w-2 rounded-full shrink-0 ${isListening ? 'bg-red-400 animate-pulse' : 'bg-slate-600'}`} />
+            <span className={`h-2 w-2 rounded-full shrink-0 ${isListening ? 'bg-red-400 animate-pulse' : 'bg-slate-400 dark:bg-slate-600'}`} />
             {isListening ? 'Listening…' : <><Mic size={14} /> Voice</>}
           </button>
 
@@ -221,7 +221,7 @@ export default function IntakeConsole({ onSubmit, isProcessing }) {
             type="button"
             onClick={loadSample}
             id="load-sample-btn"
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-display text-[12px] font-medium text-slate-400 hover:border-white/20 hover:text-slate-200 transition-colors"
+            className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 font-display text-[12px] font-medium text-slate-700 dark:text-slate-400 hover:border-black/20 dark:hover:border-white/20 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
           >
             Sample
           </button>
